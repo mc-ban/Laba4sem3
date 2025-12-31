@@ -1,6 +1,4 @@
-﻿
-
-namespace TestWPF
+﻿namespace TestWPF
 {
     [TestClass]
     public class GameTests
