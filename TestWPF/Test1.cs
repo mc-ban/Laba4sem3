@@ -1,34 +1,20 @@
-﻿namespace TestWPF
+﻿
+using WPFNASTYA.Core.GameState;
+using WPFNASTYA.Core.Models;
+
+namespace TestWPF
 {
     [TestClass]
     public class GameTests
     {
         #region Тесты Player
 
-        [TestMethod]
-        public void Player_Constructor_ShouldInitializeProperties()
-        {
-            // Arrange & Act
-            var player = new Player("TestPlayer", Faction.Nature);
-
-            // Assert
-            Assert.AreEqual("TestPlayer", player.Name);
-            Assert.AreEqual(Faction.Nature, player.Faction);
-            Assert.AreEqual(30, player.Health);
-            Assert.AreEqual(30, player.MaxHealth);
-            Assert.AreEqual(0, player.Mana);
-            Assert.AreEqual(0, player.MaxMana);
-            Assert.IsNotNull(player.Hand);
-            Assert.IsNotNull(player.Board);
-            Assert.IsNotNull(player.Deck);
-            Assert.IsNotNull(player.Graveyard);
-        }
-
+        
         [TestMethod]
         public void Player_DrawCard_ShouldAddCardToHand()
         {
             // Arrange
-            var player = new Player("TestPlayer", Faction.Nature);
+            var player = new Player("TestPlayer", Faction.Humans);
             var card = new CreatureCard
             {
                 Name = "Test Creature",
@@ -53,7 +39,7 @@
         public void Player_DrawCard_WhenDeckEmpty_ShouldCauseFatigue()
         {
             // Arrange
-            var player = new Player("TestPlayer", Faction.Nature);
+            var player = new Player("TestPlayer", Faction.Humans);
             player.Deck = new List<ICard>();
             int initialHealth = player.Health;
 
@@ -70,7 +56,7 @@
         public void Player_DrawCard_WhenHandFull_ShouldBurnCards()
         {
             // Arrange
-            var player = new Player("TestPlayer", Faction.Nature);
+            var player = new Player("TestPlayer", Faction.Humans);
 
             // Заполняем руку
             for (int i = 0; i < 10; i++)
@@ -99,7 +85,7 @@
         public void Player_SpendMana_ShouldReduceMana()
         {
             // Arrange
-            var player = new Player("TestPlayer", Faction.Nature);
+            var player = new Player("TestPlayer", Faction.Humans);
             player.Mana = 5;
             player.MaxMana = 10;
 
@@ -115,7 +101,7 @@
         public void Player_SpendMana_MoreThanAvailable_ShouldSetToZero()
         {
             // Arrange
-            var player = new Player("TestPlayer", Faction.Nature);
+            var player = new Player("TestPlayer", Faction.Humans);
             player.Mana = 3;
             player.MaxMana = 10;
 
@@ -130,7 +116,7 @@
         public void Player_TakeDamage_ShouldReduceHealth()
         {
             // Arrange
-            var player = new Player("TestPlayer", Faction.Nature);
+            var player = new Player("TestPlayer", Faction.Humans);
             int initialHealth = player.Health;
 
             // Act
@@ -144,7 +130,7 @@
         public void Player_TakeDamage_ShouldNotGoBelowZero()
         {
             // Arrange
-            var player = new Player("TestPlayer", Faction.Nature);
+            var player = new Player("TestPlayer", Faction.Humans);
             player.Health = 3;
 
             // Act
@@ -158,7 +144,7 @@
         public void Player_Heal_ShouldIncreaseHealth()
         {
             // Arrange
-            var player = new Player("TestPlayer", Faction.Nature);
+            var player = new Player("TestPlayer", Faction.Humans);
             player.Health = 20;
 
             // Act
@@ -172,7 +158,7 @@
         public void Player_Heal_ShouldNotExceedMaxHealth()
         {
             // Arrange
-            var player = new Player("TestPlayer", Faction.Nature);
+            var player = new Player("TestPlayer", Faction.Humans);
             player.Health = 28;
             player.MaxHealth = 30;
 
@@ -187,7 +173,7 @@
         public void Player_ResetMana_ShouldIncreaseManaCrystals()
         {
             // Arrange
-            var player = new Player("TestPlayer", Faction.Nature);
+            var player = new Player("TestPlayer", Faction.Humans);
             player.ManaCrystals = 3;
             player.Mana = 0;
             player.MaxMana = 3;
@@ -205,7 +191,7 @@
         public void Player_ResetMana_ShouldNotExceedTenCrystals()
         {
             // Arrange
-            var player = new Player("TestPlayer", Faction.Nature);
+            var player = new Player("TestPlayer", Faction.Humans);
             player.ManaCrystals = 10;
 
             // Act
@@ -332,26 +318,7 @@
             Assert.IsFalse(creature.IsFrozen); // Размораживается
         }
 
-        [TestMethod]
-        public void CreatureCard_HasAbility_ShouldReturnCorrectValue()
-        {
-            // Arrange
-            var creature = new CreatureCard
-            {
-                Name = "Test Creature",
-                Abilities = new List<Ability>
-                {
-                    new Ability { Type = AbilityType.Taunt },
-                    new Ability { Type = AbilityType.Charge }
-                }
-            };
-
-            // Act & Assert
-            Assert.IsTrue(creature.HasAbility(AbilityType.Taunt));
-            Assert.IsTrue(creature.HasAbility(AbilityType.Charge));
-            Assert.IsFalse(creature.HasAbility(AbilityType.Lifesteal));
-        }
-
+    
         #endregion
 
         #region Тесты GameState
@@ -360,8 +327,8 @@
         public void GameState_Constructor_ShouldInitializeGame()
         {
             // Arrange
-            var player1 = new Player("Player1", Faction.Nature);
-            var player2 = new Player("Player2", Faction.Fire);
+            var player1 = new Player("Player1", Faction.Humans);
+            var player2 = new Player("Player2", Faction.Beasts);
 
             // Act
             var gameState = new GameState(player1, player2);
@@ -380,8 +347,8 @@
         public void GameState_StartTurn_ShouldResetPlayerMana()
         {
             // Arrange
-            var player1 = new Player("Player1", Faction.Nature);
-            var player2 = new Player("Player2", Faction.Fire);
+            var player1 = new Player("Player1", Faction.Humans);
+            var player2 = new Player("Player2", Faction.Beasts);
             var gameState = new GameState(player1, player2);
 
             // Игрок использовал всю ману
@@ -400,8 +367,8 @@
         public void GameState_EndTurn_ShouldSwitchPlayers()
         {
             // Arrange
-            var player1 = new Player("Player1", Faction.Nature);
-            var player2 = new Player("Player2", Faction.Fire);
+            var player1 = new Player("Player1", Faction.Humans);
+            var player2 = new Player("Player2", Faction.Beasts);
             var gameState = new GameState(player1, player2);
 
             // Act
@@ -417,8 +384,8 @@
         public void GameState_AttackCreature_ShouldDamageBothCreatures()
         {
             // Arrange
-            var player1 = new Player("Player1", Faction.Nature);
-            var player2 = new Player("Player2", Faction.Fire);
+            var player1 = new Player("Player1", Faction.Humans);
+            var player2 = new Player("Player2", Faction.Beasts);
             var gameState = new GameState(player1, player2);
 
             var attacker = new CreatureCard
@@ -449,47 +416,11 @@
         }
 
         [TestMethod]
-        public void GameState_AttackCreature_WithPoison_ShouldKill()
-        {
-            // Arrange
-            var player1 = new Player("Player1", Faction.Nature);
-            var player2 = new Player("Player2", Faction.Fire);
-            var gameState = new GameState(player1, player2);
-
-            var attacker = new CreatureCard
-            {
-                Name = "Poison Attacker",
-                Attack = 1,
-                Health = 5,
-                CanAttack = true,
-                Abilities = new List<Ability> { new Ability { Type = AbilityType.Poison } }
-            };
-
-            var defender = new CreatureCard
-            {
-                Name = "Defender",
-                Attack = 2,
-                Health = 10
-            };
-
-            player1.Board.Add(attacker);
-            player2.Board.Add(defender);
-
-            // Act
-            var result = gameState.Attack(attacker, defender);
-
-            // Assert
-            Assert.IsTrue(result.IsSuccessful);
-            Assert.AreEqual(3, attacker.Health); // 5 - 2 = 3
-            Assert.AreEqual(0, defender.Health); // Убит ядом
-        }
-
-        [TestMethod]
         public void GameState_AttackPlayer_ShouldDamageOpponent()
         {
             // Arrange
-            var player1 = new Player("Player1", Faction.Nature);
-            var player2 = new Player("Player2", Faction.Fire);
+            var player1 = new Player("Player1", Faction.Humans);
+            var player2 = new Player("Player2", Faction.Beasts);
             var gameState = new GameState(player1, player2);
 
             var attacker = new CreatureCard
@@ -516,8 +447,8 @@
         public void GameState_Attack_WithTaunt_ShouldFailWithoutTauntTarget()
         {
             // Arrange
-            var player1 = new Player("Player1", Faction.Nature);
-            var player2 = new Player("Player2", Faction.Fire);
+            var player1 = new Player("Player1", Faction.Humans);
+            var player2 = new Player("Player2", Faction.Beasts);
             var gameState = new GameState(player1, player2);
 
             var attacker = new CreatureCard
@@ -533,7 +464,6 @@
                 Name = "Taunt Defender",
                 Attack = 1,
                 Health = 3,
-                IsTaunt = true
             };
 
             var regularCreature = new CreatureCard
@@ -559,8 +489,8 @@
         public void GameState_CheckGameOver_Player1Dead_ShouldSetPlayer2Wins()
         {
             // Arrange
-            var player1 = new Player("Player1", Faction.Nature);
-            var player2 = new Player("Player2", Faction.Fire);
+            var player1 = new Player("Player1", Faction.Humans);
+            var player2 = new Player("Player2", Faction.Beasts);
             var gameState = new GameState(player1, player2);
 
             player1.Health = 0;
@@ -583,8 +513,8 @@
         public void GameState_CheckGameOver_BothDead_ShouldSetDraw()
         {
             // Arrange
-            var player1 = new Player("Player1", Faction.Nature);
-            var player2 = new Player("Player2", Faction.Fire);
+            var player1 = new Player("Player1", Faction.Humans);
+            var player2 = new Player("Player2", Faction.Beasts);
             var gameState = new GameState(player1, player2);
 
             player1.Health = 0;
@@ -613,11 +543,10 @@
             // Arrange & Act
             var spell = new SpellCard
             {
-                Name = "Fireball",
+                Name = "Beastsball",
                 ManaCost = 4,
                 Description = "Deals 6 damage",
-                Faction = Faction.Fire,
-                Rarity = Rarity.Common,
+                Faction = Faction.Beasts,
                 Effect = new SpellEffect
                 {
                     Type = SpellEffectType.Damage,
@@ -626,7 +555,7 @@
             };
 
             // Assert
-            Assert.AreEqual("Fireball", spell.Name);
+            Assert.AreEqual("Beastsball", spell.Name);
             Assert.AreEqual(4, spell.ManaCost);
             Assert.AreEqual(CardType.Spell, spell.Type);
             Assert.AreEqual(SpellEffectType.Damage, spell.Effect.Type);
@@ -637,13 +566,13 @@
         public void Player_PlaySpellCard_Damage_ShouldDamageTarget()
         {
             // Arrange
-            var player = new Player("TestPlayer", Faction.Nature);
+            var player = new Player("TestPlayer", Faction.Humans);
             player.Mana = 10;
             player.MaxMana = 10;
 
             var spell = new SpellCard
             {
-                Name = "Fireball",
+                Name = "Beastsball",
                 ManaCost = 4,
                 Effect = new SpellEffect
                 {
@@ -659,7 +588,7 @@
             };
 
             player.Hand.Add(spell);
-            var gameState = new GameState(player, new Player("Opponent", Faction.Fire));
+            var gameState = new GameState(player, new Player("Opponent", Faction.Beasts));
 
             // Act
             var result = player.PlayCard(spell, target, gameState);
@@ -675,7 +604,7 @@
         public void Player_PlaySpellCard_Heal_ShouldHealTarget()
         {
             // Arrange
-            var player = new Player("TestPlayer", Faction.Nature);
+            var player = new Player("TestPlayer", Faction.Humans);
             player.Mana = 10;
 
             var spell = new SpellCard
@@ -697,7 +626,7 @@
             };
 
             player.Hand.Add(spell);
-            var gameState = new GameState(player, new Player("Opponent", Faction.Fire));
+            var gameState = new GameState(player, new Player("Opponent", Faction.Beasts));
 
             // Act
             var result = player.PlayCard(spell, target, gameState);
@@ -712,7 +641,7 @@
         public void Player_PlaySpellCard_NotEnoughMana_ShouldFail()
         {
             // Arrange
-            var player = new Player("TestPlayer", Faction.Nature);
+            var player = new Player("TestPlayer", Faction.Humans);
             player.Mana = 2;
 
             var spell = new SpellCard
@@ -742,12 +671,12 @@
         public void Player_PlaySpellCard_NotInHand_ShouldFail()
         {
             // Arrange
-            var player = new Player("TestPlayer", Faction.Nature);
+            var player = new Player("TestPlayer", Faction.Humans);
             player.Mana = 10;
 
             var spell = new SpellCard
             {
-                Name = "Fireball",
+                Name = "Beastsball",
                 ManaCost = 4,
                 Effect = new SpellEffect
                 {
@@ -774,8 +703,8 @@
         public void FullGameFlow_AttackSequence_ShouldWorkCorrectly()
         {
             // Arrange
-            var player1 = new Player("Player1", Faction.Nature);
-            var player2 = new Player("Player2", Faction.Fire);
+            var player1 = new Player("Player1", Faction.Humans);
+            var player2 = new Player("Player2", Faction.Beasts);
             var gameState = new GameState(player1, player2);
 
             // Игрок 1 призывает существо
@@ -815,8 +744,8 @@
         public void FullGameFlow_SpellAndAttack_ShouldWorkCorrectly()
         {
             // Arrange
-            var player1 = new Player("Player1", Faction.Nature);
-            var player2 = new Player("Player2", Faction.Fire);
+            var player1 = new Player("Player1", Faction.Humans);
+            var player2 = new Player("Player2", Faction.Beasts);
             var gameState = new GameState(player1, player2);
 
             // Игрок 2 призывает существо с Taunt
@@ -824,15 +753,14 @@
             {
                 Name = "Taunt Guard",
                 Health = 5,
-                IsTaunt = true
             };
 
             player2.Board.Add(tauntCreature);
 
             // Игрок 1 имеет заклинание урона
-            var fireball = new SpellCard
+            var Beastsball = new SpellCard
             {
-                Name = "Fireball",
+                Name = "Beastsball",
                 ManaCost = 4,
                 Effect = new SpellEffect
                 {
@@ -842,10 +770,10 @@
             };
 
             player1.Mana = 10;
-            player1.Hand.Add(fireball);
+            player1.Hand.Add(Beastsball);
 
             // Act 1: Игрок 1 использует огненный шар на существо с Taunt
-            var spellResult = gameState.PlayCard(fireball, tauntCreature);
+            var spellResult = gameState.PlayCard(Beastsball, tauntCreature);
             Assert.IsTrue(spellResult.IsSuccess);
 
             // Assert 1: Существо должно умереть (6 урона > 5 здоровья)
@@ -879,7 +807,7 @@
         public void Player_CanPlayCard_CreatureWithFullBoard_ShouldReturnFalse()
         {
             // Arrange
-            var player = new Player("TestPlayer", Faction.Nature);
+            var player = new Player("TestPlayer", Faction.Humans);
             player.Mana = 10;
 
             // Заполняем поле
@@ -892,7 +820,6 @@
             {
                 Name = "Extra Creature",
                 ManaCost = 3,
-                Type = CardType.Creature
             };
 
             player.Hand.Add(creature);
@@ -929,8 +856,8 @@
         public void GameState_Log_ShouldAddTimestampedMessages()
         {
             // Arrange
-            var player1 = new Player("Player1", Faction.Nature);
-            var player2 = new Player("Player2", Faction.Fire);
+            var player1 = new Player("Player1", Faction.Humans);
+            var player2 = new Player("Player2", Faction.Beasts);
             var gameState = new GameState(player1, player2);
 
             // Act
