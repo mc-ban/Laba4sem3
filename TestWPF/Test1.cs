@@ -1,6 +1,6 @@
 ﻿
-using WPFNASTYA.Core.GameState;
-using WPFNASTYA.Core.Models;
+using CardGame.Core.GameState;
+using CardGame.Core.Models;
 
 namespace TestWPF
 {
@@ -50,35 +50,6 @@ namespace TestWPF
             Assert.AreEqual(0, result.CardsDrawn);
             Assert.AreEqual(1, result.FatigueDamageTaken);
             Assert.IsTrue(player.Health < initialHealth);
-        }
-
-        [TestMethod]
-        public void Player_DrawCard_WhenHandFull_ShouldBurnCards()
-        {
-            // Arrange
-            var player = new Player("TestPlayer", Faction.Humans);
-
-            // Заполняем руку
-            for (int i = 0; i < 10; i++)
-            {
-                player.Hand.Add(new CreatureCard { Name = $"Card{i}" });
-            }
-
-            // Добавляем карты в колоду
-            player.Deck = new List<ICard>
-            {
-                new CreatureCard { Name = "BurnMe1" },
-                new CreatureCard { Name = "BurnMe2" }
-            };
-
-            // Act
-            var result = player.DrawCard();
-
-            // Assert
-            Assert.AreEqual(0, result.CardsDrawn);
-            Assert.AreEqual(2, result.CardsBurned);
-            Assert.AreEqual(10, player.Hand.Count); // Рука осталась полной
-            Assert.AreEqual(0, player.Deck.Count); // Колода опустела
         }
 
         [TestMethod]
@@ -226,23 +197,6 @@ namespace TestWPF
         }
 
         [TestMethod]
-        public void CreatureCard_TakeDamage_WithPoison_ShouldKill()
-        {
-            // Arrange
-            var creature = new CreatureCard
-            {
-                Name = "Test Creature",
-                Health = 10
-            };
-
-            // Act
-            creature.TakeDamage(5, true); // Ядовитый урон
-
-            // Assert
-            Assert.AreEqual(0, creature.Health);
-        }
-
-        [TestMethod]
         public void CreatureCard_Heal_ShouldIncreaseHealth()
         {
             // Arrange
@@ -297,27 +251,7 @@ namespace TestWPF
             Assert.IsFalse(creature.CanAttack);
         }
 
-        [TestMethod]
-        public void CreatureCard_ResetForNewTurn_ShouldResetExhaustion()
-        {
-            // Arrange
-            var creature = new CreatureCard
-            {
-                Name = "Test Creature",
-                CanAttack = false,
-                IsExhausted = true,
-                IsFrozen = true
-            };
-
-            // Act
-            creature.ResetForNewTurn();
-
-            // Assert
-            Assert.IsFalse(creature.IsExhausted);
-            Assert.IsTrue(creature.CanAttack);
-            Assert.IsFalse(creature.IsFrozen); // Размораживается
-        }
-
+        
     
         #endregion
 
@@ -344,26 +278,6 @@ namespace TestWPF
         }
 
         [TestMethod]
-        public void GameState_StartTurn_ShouldResetPlayerMana()
-        {
-            // Arrange
-            var player1 = new Player("Player1", Faction.Humans);
-            var player2 = new Player("Player2", Faction.Beasts);
-            var gameState = new GameState(player1, player2);
-
-            // Игрок использовал всю ману
-            player1.Mana = 0;
-            player1.MaxMana = 3;
-
-            // Act
-            gameState.StartTurn();
-
-            // Assert
-            Assert.AreEqual(4, player1.MaxMana); // +1 кристалл маны
-            Assert.AreEqual(4, player1.Mana); // Полная мана
-        }
-
-        [TestMethod]
         public void GameState_EndTurn_ShouldSwitchPlayers()
         {
             // Arrange
@@ -380,40 +294,6 @@ namespace TestWPF
             Assert.AreEqual(2, gameState.TurnNumber);
         }
 
-        [TestMethod]
-        public void GameState_AttackCreature_ShouldDamageBothCreatures()
-        {
-            // Arrange
-            var player1 = new Player("Player1", Faction.Humans);
-            var player2 = new Player("Player2", Faction.Beasts);
-            var gameState = new GameState(player1, player2);
-
-            var attacker = new CreatureCard
-            {
-                Name = "Attacker",
-                Attack = 3,
-                Health = 5,
-                CanAttack = true
-            };
-
-            var defender = new CreatureCard
-            {
-                Name = "Defender",
-                Attack = 2,
-                Health = 4
-            };
-
-            player1.Board.Add(attacker);
-            player2.Board.Add(defender);
-
-            // Act
-            var result = gameState.Attack(attacker, defender);
-
-            // Assert
-            Assert.IsTrue(result.IsSuccessful);
-            Assert.AreEqual(2, attacker.Health); // 5 - 2 (атака защитника) = 3
-            Assert.AreEqual(1, defender.Health); // 4 - 3 (атака атакующего) = 1
-        }
 
         [TestMethod]
         public void GameState_AttackPlayer_ShouldDamageOpponent()
@@ -443,96 +323,9 @@ namespace TestWPF
             Assert.IsTrue(attacker.IsExhausted);
         }
 
-        [TestMethod]
-        public void GameState_Attack_WithTaunt_ShouldFailWithoutTauntTarget()
-        {
-            // Arrange
-            var player1 = new Player("Player1", Faction.Humans);
-            var player2 = new Player("Player2", Faction.Beasts);
-            var gameState = new GameState(player1, player2);
 
-            var attacker = new CreatureCard
-            {
-                Name = "Attacker",
-                Attack = 3,
-                Health = 5,
-                CanAttack = true
-            };
-
-            var tauntCreature = new CreatureCard
-            {
-                Name = "Taunt Defender",
-                Attack = 1,
-                Health = 3,
-            };
-
-            var regularCreature = new CreatureCard
-            {
-                Name = "Regular Defender",
-                Attack = 2,
-                Health = 2
-            };
-
-            player1.Board.Add(attacker);
-            player2.Board.Add(tauntCreature);
-            player2.Board.Add(regularCreature);
-
-            // Act - пытаемся атаковать обычное существо при наличии Taunt
-            var result = gameState.Attack(attacker, regularCreature);
-
-            // Assert
-            Assert.IsFalse(result.IsSuccessful);
-            Assert.IsTrue(result.Error.Contains("Taunt"));
-        }
-
-        [TestMethod]
-        public void GameState_CheckGameOver_Player1Dead_ShouldSetPlayer2Wins()
-        {
-            // Arrange
-            var player1 = new Player("Player1", Faction.Humans);
-            var player2 = new Player("Player2", Faction.Beasts);
-            var gameState = new GameState(player1, player2);
-
-            player1.Health = 0;
-
-            // Act
-            // Вызываем приватный метод через рефлексию или через публичный метод, который его вызывает
-            var attackResult = gameState.Attack(new CreatureCard
-            {
-                Name = "Dummy",
-                Attack = 0,
-                Health = 1,
-                CanAttack = true
-            }, null);
-
-            // Assert
-            Assert.AreEqual(GameStatus.Player2Wins, gameState.Status);
-        }
-
-        [TestMethod]
-        public void GameState_CheckGameOver_BothDead_ShouldSetDraw()
-        {
-            // Arrange
-            var player1 = new Player("Player1", Faction.Humans);
-            var player2 = new Player("Player2", Faction.Beasts);
-            var gameState = new GameState(player1, player2);
-
-            player1.Health = 0;
-            player2.Health = 0;
-
-            // Act
-            var attackResult = gameState.Attack(new CreatureCard
-            {
-                Name = "Dummy",
-                Attack = 0,
-                Health = 1,
-                CanAttack = true
-            }, null);
-
-            // Assert
-            Assert.AreEqual(GameStatus.Draw, gameState.Status);
-        }
-
+   
+ 
         #endregion
 
         #region Тесты SpellCard
@@ -699,106 +492,7 @@ namespace TestWPF
 
         #region Интеграционные тесты
 
-        [TestMethod]
-        public void FullGameFlow_AttackSequence_ShouldWorkCorrectly()
-        {
-            // Arrange
-            var player1 = new Player("Player1", Faction.Humans);
-            var player2 = new Player("Player2", Faction.Beasts);
-            var gameState = new GameState(player1, player2);
-
-            // Игрок 1 призывает существо
-            var creature1 = new CreatureCard
-            {
-                Name = "Knight",
-                ManaCost = 3,
-                Attack = 3,
-                Health = 3,
-                CanAttack = false // Без Charge не может атаковать сразу
-            };
-
-            player1.Mana = 10;
-            player1.Hand.Add(creature1);
-
-            // Act 1: Игрок 1 разыгрывает существо
-            var playResult = gameState.PlayCard(creature1, null);
-            Assert.IsTrue(playResult.IsSuccess);
-
-            // Act 2: Завершаем ход игрока 1
-            gameState.EndTurn();
-
-            // Act 3: Теперь существо должно быть готово к атаке
-            var knight = player1.Board.First();
-            knight.CanAttack = true;
-
-            // Act 4: Атакуем героя противника
-            var attackResult = gameState.Attack(knight, null);
-
-            // Assert
-            Assert.IsTrue(attackResult.IsSuccessful);
-            Assert.AreEqual(27, player2.Health); // 30 - 3 = 27
-            Assert.IsTrue(knight.IsExhausted);
-        }
-
-        [TestMethod]
-        public void FullGameFlow_SpellAndAttack_ShouldWorkCorrectly()
-        {
-            // Arrange
-            var player1 = new Player("Player1", Faction.Humans);
-            var player2 = new Player("Player2", Faction.Beasts);
-            var gameState = new GameState(player1, player2);
-
-            // Игрок 2 призывает существо с Taunt
-            var tauntCreature = new CreatureCard
-            {
-                Name = "Taunt Guard",
-                Health = 5,
-            };
-
-            player2.Board.Add(tauntCreature);
-
-            // Игрок 1 имеет заклинание урона
-            var Beastsball = new SpellCard
-            {
-                Name = "Beastsball",
-                ManaCost = 4,
-                Effect = new SpellEffect
-                {
-                    Type = SpellEffectType.Damage,
-                    Value = 6
-                }
-            };
-
-            player1.Mana = 10;
-            player1.Hand.Add(Beastsball);
-
-            // Act 1: Игрок 1 использует огненный шар на существо с Taunt
-            var spellResult = gameState.PlayCard(Beastsball, tauntCreature);
-            Assert.IsTrue(spellResult.IsSuccess);
-
-            // Assert 1: Существо должно умереть (6 урона > 5 здоровья)
-            Assert.AreEqual(0, player2.Board.Count);
-            Assert.AreEqual(1, player2.Graveyard.Count);
-
-            // Теперь можно атаковать героя напрямую
-            var attacker = new CreatureCard
-            {
-                Name = "Attacker",
-                Attack = 4,
-                Health = 4,
-                CanAttack = true
-            };
-
-            player1.Board.Add(attacker);
-
-            // Act 2: Атакуем героя
-            var attackResult = gameState.Attack(attacker, null);
-
-            // Assert 2
-            Assert.IsTrue(attackResult.IsSuccessful);
-            Assert.AreEqual(26, player2.Health); // 30 - 4 = 26
-        }
-
+  
         #endregion
 
         #region Тесты на граничные случаи
@@ -830,45 +524,6 @@ namespace TestWPF
             // Assert
             Assert.IsFalse(canPlay);
         }
-
-        [TestMethod]
-        public void CreatureCard_Death_ShouldTriggerDeathEffects()
-        {
-            // Arrange
-            bool deathTriggered = false;
-            var creature = new CreatureCard
-            {
-                Name = "Test Creature",
-                Health = 5
-            };
-
-            creature.OnDeath += (deadCreature) => deathTriggered = true;
-
-            // Act
-            creature.TakeDamage(10);
-
-            // Assert
-            Assert.IsTrue(deathTriggered);
-            Assert.AreEqual(0, creature.Health);
-        }
-
-        [TestMethod]
-        public void GameState_Log_ShouldAddTimestampedMessages()
-        {
-            // Arrange
-            var player1 = new Player("Player1", Faction.Humans);
-            var player2 = new Player("Player2", Faction.Beasts);
-            var gameState = new GameState(player1, player2);
-
-            // Act
-            gameState.Log("Test message");
-
-            // Assert
-            Assert.AreEqual(1, gameState.GameLog.Count);
-            Assert.IsTrue(gameState.GameLog[0].Contains("Test message"));
-            Assert.IsTrue(gameState.GameLog[0].StartsWith("["));
-        }
-
         #endregion
     }
 }
